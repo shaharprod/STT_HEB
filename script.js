@@ -13,17 +13,20 @@ class SpeechToText {
         this.startBtn = document.getElementById('startBtn');
         this.stopBtn = document.getElementById('stopBtn');
         this.clearBtn = document.getElementById('clearBtn');
+        this.downloadBtn = document.getElementById('downloadBtn');
         this.outputText = document.getElementById('outputText');
         this.statusText = document.getElementById('statusText');
         this.recordingIndicator = document.getElementById('recordingIndicator');
         this.languageSelect = document.getElementById('languageSelect');
         this.continuousModeCheckbox = document.getElementById('continuousMode');
+        this.downloadFormatSelect = document.getElementById('downloadFormat');
     }
 
     setupEventListeners() {
         this.startBtn.addEventListener('click', () => this.startRecording());
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.clearBtn.addEventListener('click', () => this.clearText());
+        this.downloadBtn.addEventListener('click', () => this.downloadText());
         this.languageSelect.addEventListener('change', () => this.updateLanguage());
         this.continuousModeCheckbox.addEventListener('change', (e) => {
             this.continuousMode = e.target.checked;
@@ -119,14 +122,134 @@ class SpeechToText {
     clearText() {
         this.outputText.value = '';
         this.updateStatus('הטקסט נוקה', 'cleared');
+        this.updateDownloadButton();
+    }
+
+    downloadText() {
+        const text = this.outputText.value.trim();
+        
+        if (!text) {
+            this.updateStatus('אין טקסט להורדה', 'error');
+            return;
+        }
+
+        const format = this.downloadFormatSelect.value;
+        const timestamp = new Date().toLocaleString('he-IL', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).replace(/[\/\s:]/g, '-');
+
+        let filename, content, mimeType;
+
+        switch (format) {
+            case 'txt':
+                filename = `stt-hebrew-${timestamp}.txt`;
+                content = text;
+                mimeType = 'text/plain;charset=utf-8';
+                break;
+            case 'doc':
+                filename = `stt-hebrew-${timestamp}.doc`;
+                content = this.createWordDocument(text);
+                mimeType = 'application/msword';
+                break;
+            case 'html':
+                filename = `stt-hebrew-${timestamp}.html`;
+                content = this.createHtmlDocument(text);
+                mimeType = 'text/html;charset=utf-8';
+                break;
+            default:
+                filename = `stt-hebrew-${timestamp}.txt`;
+                content = text;
+                mimeType = 'text/plain;charset=utf-8';
+        }
+
+        this.downloadFile(filename, content, mimeType);
+        this.updateStatus(`קובץ ${format.toUpperCase()} הורד בהצלחה`, 'success');
+    }
+
+    createWordDocument(text) {
+        // יצירת מסמך Word פשוט בפורמט RTF
+        const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+\\f0\\fs24 ${text.replace(/\n/g, '\\par ')}}`;
+        return rtfContent;
+    }
+
+    createHtmlDocument(text) {
+        return `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טקסט מומר - STT עברית</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            text-align: right;
+            margin: 40px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .content {
+            font-size: 16px;
+            white-space: pre-wrap;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎤 טקסט מומר - STT עברית</h1>
+        <p>נוצר ב: ${new Date().toLocaleString('he-IL')}</p>
+    </div>
+    <div class="content">${text}</div>
+    <div class="footer">
+        <p>נוצר באמצעות STT עברית - Speech to Text</p>
+    </div>
+</body>
+</html>`;
+    }
+
+    downloadFile(filename, content, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // ניקוי ה-URL לאחר ההורדה
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
 
     appendToOutput(text) {
         const currentText = this.outputText.value;
         this.outputText.value = currentText + (currentText ? ' ' : '') + text;
-
+        
         // גלילה אוטומטית לתחתית
         this.outputText.scrollTop = this.outputText.scrollHeight;
+        
+        // עדכון כפתור ההורדה
+        this.updateDownloadButton();
     }
 
     updateLanguage() {
@@ -138,6 +261,11 @@ class SpeechToText {
     updateStatus(message, type = 'info') {
         this.statusText.textContent = message;
         this.statusText.className = `status-text ${type}`;
+    }
+
+    updateDownloadButton() {
+        const hasText = this.outputText.value.trim().length > 0;
+        this.downloadBtn.disabled = !hasText;
     }
 
     showRecordingIndicator() {
@@ -208,5 +336,11 @@ document.addEventListener('keydown', (e) => {
     if (e.code === 'Delete' && e.ctrlKey) {
         e.preventDefault();
         document.getElementById('clearBtn').click();
+    }
+    
+    // Ctrl+S להורדת הקובץ
+    if (e.code === 'KeyS' && e.ctrlKey) {
+        e.preventDefault();
+        document.getElementById('downloadBtn').click();
     }
 });

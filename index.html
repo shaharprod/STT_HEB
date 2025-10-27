@@ -27,6 +27,10 @@
                     <span class="icon">🗑️</span>
                     נקה טקסט
                 </button>
+                <button id="downloadBtn" class="btn btn-success">
+                    <span class="icon">💾</span>
+                    הורד קובץ
+                </button>
             </div>
 
             <div class="status">
@@ -56,6 +60,14 @@
                     <label for="continuousMode">מצב רציף:</label>
                     <input type="checkbox" id="continuousMode">
                     <span class="checkbox-label">המשך הקלטה אוטומטית</span>
+                </div>
+                <div class="setting-group">
+                    <label for="downloadFormat">פורמט הורדה:</label>
+                    <select id="downloadFormat">
+                        <option value="txt">קובץ טקסט (.txt)</option>
+                        <option value="doc">מסמך Word (.doc)</option>
+                        <option value="html">דף HTML (.html)</option>
+                    </select>
                 </div>
             </div>
         </main>

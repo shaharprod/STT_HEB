@@ -109,6 +109,11 @@ main {
     color: #333;
 }
 
+.btn-success {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
 .icon {
     font-size: 1.2rem;
 }
@@ -161,6 +166,12 @@ main {
     background: #f0fff4;
     color: #22543d;
     border: 1px solid #9ae6b4;
+}
+
+.status-text.success {
+    background: #e6fffa;
+    color: #234e52;
+    border: 1px solid #81e6d9;
 }
 
 /* Recording Indicator */
