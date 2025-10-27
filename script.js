@@ -133,16 +133,17 @@ class SpeechToText {
             return;
         }
 
-        const format = this.downloadFormatSelect.value;
-        const timestamp = new Date().toLocaleString('he-IL', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).replace(/[\/\s:]/g, '-');
+        try {
+            const format = this.downloadFormatSelect.value;
+            const timestamp = new Date().toLocaleString('he-IL', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(/[\/\s:]/g, '-');
 
-        let filename, content, mimeType;
+            let filename, content, mimeType;
 
         switch (format) {
             case 'txt':
@@ -166,18 +167,37 @@ class SpeechToText {
                 mimeType = 'text/plain;charset=utf-8';
         }
 
-        this.downloadFile(filename, content, mimeType);
-        this.updateStatus(`קובץ ${format.toUpperCase()} הורד בהצלחה`, 'success');
+            this.downloadFile(filename, content, mimeType);
+            this.updateStatus(`קובץ ${format.toUpperCase()} הורד בהצלחה`, 'success');
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            this.updateStatus('שגיאה בהורדת הקובץ', 'error');
+        }
     }
 
     createWordDocument(text) {
         // יצירת מסמך Word פשוט בפורמט RTF
+        // תחילה נמלט את כל התווים המיוחדים של RTF
+        let escapedText = text
+            .replace(/\\/g, '\\\\')
+            .replace(/{/g, '\\{')
+            .replace(/}/g, '\\}')
+            .replace(/\n/g, '\\par\n');
+        
         const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
-\\f0\\fs24 ${text.replace(/\n/g, '\\par ')}}`;
+\\f0\\fs24 ${escapedText}}`;
         return rtfContent;
     }
 
     createHtmlDocument(text) {
+        // נמלט את הטקסט עבור HTML
+        const escapedText = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        
         return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -216,7 +236,7 @@ class SpeechToText {
         <h1>🎤 טקסט מומר - STT עברית</h1>
         <p>נוצר ב: ${new Date().toLocaleString('he-IL')}</p>
     </div>
-    <div class="content">${text}</div>
+    <div class="content">${escapedText}</div>
     <div class="footer">
         <p>נוצר באמצעות STT עברית - Speech to Text</p>
     </div>
@@ -225,29 +245,39 @@ class SpeechToText {
     }
 
     downloadFile(filename, content, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // ניקוי ה-URL לאחר ההורדה
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        try {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+
+            // מוסיפים את הקישור ל-dom כדי להבטיח שהדפדפן מזהה אותו
+            document.body.appendChild(link);
+            
+            // טריגר ללחיצה
+            link.click();
+            
+            // נקה לאחר קצת זמן
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+        } catch (error) {
+            console.error('Error in downloadFile:', error);
+            throw error;
+        }
     }
 
     appendToOutput(text) {
         const currentText = this.outputText.value;
         this.outputText.value = currentText + (currentText ? ' ' : '') + text;
-        
+
         // גלילה אוטומטית לתחתית
         this.outputText.scrollTop = this.outputText.scrollHeight;
-        
+
         // עדכון כפתור ההורדה
         this.updateDownloadButton();
     }
@@ -265,7 +295,9 @@ class SpeechToText {
 
     updateDownloadButton() {
         const hasText = this.outputText.value.trim().length > 0;
-        this.downloadBtn.disabled = !hasText;
+        if (this.downloadBtn) {
+            this.downloadBtn.disabled = !hasText;
+        }
     }
 
     showRecordingIndicator() {
@@ -314,7 +346,13 @@ class SpeechToText {
 
 // אתחול האפליקציה כשהדף נטען
 document.addEventListener('DOMContentLoaded', () => {
-    new SpeechToText();
+    const app = new SpeechToText();
+    // אתחול ראשוני לכפתור ההורדה
+    setTimeout(() => {
+        if (app.updateDownloadButton) {
+            app.updateDownloadButton();
+        }
+    }, 100);
 });
 
 // הוספת פונקציונליות נוספת
@@ -337,7 +375,7 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
         document.getElementById('clearBtn').click();
     }
-    
+
     // Ctrl+S להורדת הקובץ
     if (e.code === 'KeyS' && e.ctrlKey) {
         e.preventDefault();
