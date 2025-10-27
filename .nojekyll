@@ -1,0 +1,39 @@
+# GitHub Pages Configuration
+
+This repository is configured to work with GitHub Pages.
+
+## Files Structure
+```
+STT_HEB/
+├── index.html          # Main HTML file
+├── script.js           # JavaScript functionality
+├── style.css           # CSS styling
+├── README.md           # Documentation
+└── .nojekyll           # Disable Jekyll processing
+```
+
+## Deployment Instructions
+
+1. **Upload Files**: Upload all files to your GitHub repository
+2. **Enable Pages**:
+   - Go to repository Settings
+   - Scroll to "Pages" section
+   - Select "Deploy from a branch"
+   - Choose "main" branch
+   - Click "Save"
+3. **Access**: Your app will be available at:
+   `https://[username].github.io/STT_HEB`
+
+## Requirements
+- Modern browser (Chrome, Edge, Safari)
+- Microphone access
+- Internet connection
+- HTTPS (required for microphone access)
+
+## Features
+- Hebrew Speech-to-Text
+- Real-time transcription
+- Multiple language support
+- Responsive design
+- Keyboard shortcuts
+- Continuous recording mode

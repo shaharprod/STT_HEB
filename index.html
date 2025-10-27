@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STT עברית - Speech to Text</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎤 STT עברית</h1>
+            <p>המרת דיבור לטקסט בעברית</p>
+        </header>
+
+        <main>
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">
+                    <span class="icon">🎤</span>
+                    התחל הקלטה
+                </button>
+                <button id="stopBtn" class="btn btn-secondary" disabled>
+                    <span class="icon">⏹️</span>
+                    עצור הקלטה
+                </button>
+                <button id="clearBtn" class="btn btn-danger">
+                    <span class="icon">🗑️</span>
+                    נקה טקסט
+                </button>
+            </div>
+
+            <div class="status">
+                <div id="statusText" class="status-text">לחץ על "התחל הקלטה" כדי להתחיל</div>
+                <div id="recordingIndicator" class="recording-indicator hidden">
+                    <div class="pulse"></div>
+                    <span>מקליט...</span>
+                </div>
+            </div>
+
+            <div class="text-output">
+                <label for="outputText">טקסט מומר:</label>
+                <textarea id="outputText" placeholder="הטקסט המומר יופיע כאן..."></textarea>
+            </div>
+
+            <div class="settings">
+                <h3>הגדרות</h3>
+                <div class="setting-group">
+                    <label for="languageSelect">שפה:</label>
+                    <select id="languageSelect">
+                        <option value="he-IL">עברית (ישראל)</option>
+                        <option value="en-US">אנגלית (ארה"ב)</option>
+                        <option value="ar-SA">ערבית (ערב הסעודית)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="continuousMode">מצב רציף:</label>
+                    <input type="checkbox" id="continuousMode">
+                    <span class="checkbox-label">המשך הקלטה אוטומטית</span>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2025 STT עברית - פותח עם Web Speech API</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
