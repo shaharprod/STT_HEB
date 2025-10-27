@@ -127,7 +127,7 @@ class SpeechToText {
 
     downloadText() {
         const text = this.outputText.value.trim();
-        
+
         if (!text) {
             this.updateStatus('אין טקסט להורדה', 'error');
             return;
@@ -183,7 +183,7 @@ class SpeechToText {
             .replace(/{/g, '\\{')
             .replace(/}/g, '\\}')
             .replace(/\n/g, '\\par\n');
-        
+
         const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
 \\f0\\fs24 ${escapedText}}`;
         return rtfContent;
@@ -197,7 +197,7 @@ class SpeechToText {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-        
+
         return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -256,10 +256,10 @@ class SpeechToText {
 
             // מוסיפים את הקישור ל-dom כדי להבטיח שהדפדפן מזהה אותו
             document.body.appendChild(link);
-            
+
             // טריגר ללחיצה
             link.click();
-            
+
             // נקה לאחר קצת זמן
             setTimeout(() => {
                 document.body.removeChild(link);
