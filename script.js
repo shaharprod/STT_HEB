@@ -105,11 +105,22 @@ class SpeechToText {
             return;
         }
 
+        // בדיקה אם אנחנו במכשיר נייד
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+            this.updateStatus('מכשיר נייד זוהה - מתחיל הקלטה...', 'info');
+        }
+
         try {
-            this.recognition.start();
+            // איפוס ההכרה לפני התחלה חדשה
+            this.recognition.stop();
+            setTimeout(() => {
+                this.recognition.start();
+            }, 100);
         } catch (error) {
             console.error('Error starting recognition:', error);
-            this.updateStatus('שגיאה בהתחלת ההקלטה', 'error');
+            this.updateStatus('שגיאה בהתחלת ההקלטה - בדוק הרשאות מיקרופון', 'error');
         }
     }
 
@@ -128,20 +139,20 @@ class SpeechToText {
     addCleanText(text) {
         // ניקוי הטקסט
         let cleanText = text.trim();
-        
+
         if (!cleanText) return;
-        
+
         const currentText = this.outputText.value;
-        
+
         // בדיקה פשוטה נגד כפילויות
         if (currentText.endsWith(cleanText)) {
             return; // כפילות
         }
-        
+
         // הוספת הטקסט
         const separator = currentText ? ' ' : '';
         this.outputText.value = currentText + separator + cleanText;
-        
+
         // עדכון UI
         this.outputText.scrollTop = this.outputText.scrollHeight;
         this.updateDownloadButton();
@@ -340,25 +351,28 @@ class SpeechToText {
 
         switch (error) {
             case 'no-speech':
-                errorMessage = 'לא זוהה דיבור';
+                errorMessage = 'לא זוהה דיבור - נסה לדבר יותר חזק';
                 break;
             case 'audio-capture':
-                errorMessage = 'בעיה בגישה למיקרופון';
+                errorMessage = 'בעיה בגישה למיקרופון - בדוק הרשאות';
                 break;
             case 'not-allowed':
-                errorMessage = 'אין הרשאה לגישה למיקרופון';
+                errorMessage = 'אין הרשאה למיקרופון - לחץ על האייקון בכתובת';
                 break;
             case 'network':
-                errorMessage = 'בעיית רשת';
+                errorMessage = 'בעיית רשת - בדוק חיבור לאינטרנט';
                 break;
             case 'service-not-allowed':
-                errorMessage = 'השירות לא זמין';
+                errorMessage = 'השירות לא זמין - נסה שוב';
                 break;
             case 'bad-grammar':
-                errorMessage = 'בעיה בדקדוק';
+                errorMessage = 'בעיה בדקדוק - נסה לדבר יותר ברור';
                 break;
             case 'language-not-supported':
-                errorMessage = 'השפה לא נתמכת';
+                errorMessage = 'השפה לא נתמכת - נסה אנגלית';
+                break;
+            case 'aborted':
+                errorMessage = 'ההקלטה בוטלה';
                 break;
         }
 
