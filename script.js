@@ -69,7 +69,7 @@ class SpeechToText {
             }
 
             if (finalTranscript) {
-                this.appendToOutput(finalTranscript);
+                this.addCleanText(finalTranscript);
             }
 
             if (interimTranscript) {
@@ -122,6 +122,28 @@ class SpeechToText {
     clearText() {
         this.outputText.value = '';
         this.updateStatus('הטקסט נוקה', 'cleared');
+        this.updateDownloadButton();
+    }
+
+    addCleanText(text) {
+        // ניקוי הטקסט
+        let cleanText = text.trim();
+        
+        if (!cleanText) return;
+        
+        const currentText = this.outputText.value;
+        
+        // בדיקה פשוטה נגד כפילויות
+        if (currentText.endsWith(cleanText)) {
+            return; // כפילות
+        }
+        
+        // הוספת הטקסט
+        const separator = currentText ? ' ' : '';
+        this.outputText.value = currentText + separator + cleanText;
+        
+        // עדכון UI
+        this.outputText.scrollTop = this.outputText.scrollHeight;
         this.updateDownloadButton();
     }
 
