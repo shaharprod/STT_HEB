@@ -4,6 +4,8 @@ class SpeechToText {
         this.isRecording = false;
         this.continuousMode = false;
         this.lastInterimText = ''; // שמירת טקסט interim לנייד
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.mobileTimeout = null; // timeout לניידים
 
         this.initializeElements();
         this.setupEventListeners();
@@ -44,8 +46,16 @@ class SpeechToText {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         this.recognition = new SpeechRecognition();
 
-        this.recognition.continuous = true;
-        this.recognition.interimResults = true;
+        // הגדרות מיוחדות לניידים
+        if (this.isMobile) {
+            this.recognition.continuous = false; // בנייד - לא רציף
+            this.recognition.interimResults = true;
+            this.recognition.maxAlternatives = 1;
+        } else {
+            this.recognition.continuous = true;
+            this.recognition.interimResults = true;
+        }
+        
         this.recognition.lang = 'he-IL';
 
         this.recognition.onstart = () => {
@@ -69,17 +79,25 @@ class SpeechToText {
                 }
             }
 
-            // בנייד - גם interimTranscript יכול להיות תוצאה סופית
-            if (finalTranscript) {
-                this.addCleanText(finalTranscript);
-                this.lastInterimText = ''; // נקה את ה-interim אחרי final
-            } else if (interimTranscript && interimTranscript.length > 2) {
-                // שמור את ה-interimTranscript למקרה שלא יהיה final
-                this.lastInterimText = interimTranscript;
-            }
-
-            if (interimTranscript) {
-                this.updateStatus(`מזהה: ${interimTranscript}`, 'interim');
+            // טיפול מיוחד לניידים
+            if (this.isMobile) {
+                if (finalTranscript) {
+                    // בנייד - הוסף מיד את הטקסט הסופי
+                    this.addCleanText(finalTranscript);
+                    this.lastInterimText = '';
+                } else if (interimTranscript && interimTranscript.length > 1) {
+                    // הצג interim text אבל אל תוסיף עדיין
+                    this.updateStatus(`מזהה: ${interimTranscript}`, 'interim');
+                    this.lastInterimText = interimTranscript;
+                }
+            } else {
+                // טיפול רגיל למחשב
+                if (finalTranscript) {
+                    this.addCleanText(finalTranscript);
+                }
+                if (interimTranscript) {
+                    this.updateStatus(`מזהה: ${interimTranscript}`, 'interim');
+                }
             }
         };
 
@@ -93,20 +111,35 @@ class SpeechToText {
             this.updateUI();
             this.hideRecordingIndicator();
 
-            // בנייד - אם יש interimTranscript שלא נשמר, נשמור אותו עכשיו
-            if (this.lastInterimText && this.lastInterimText.length > 2) {
-                this.addCleanText(this.lastInterimText);
-                this.lastInterimText = '';
-            }
-
-            if (this.continuousMode) {
-                setTimeout(() => {
-                    if (!this.isRecording) {
-                        this.startRecording();
-                    }
-                }, 100);
+            // טיפול מיוחד לניידים
+            if (this.isMobile) {
+                // בנייד - אם יש interimTranscript שלא נשמר, נשמור אותו עכשיו
+                if (this.lastInterimText && this.lastInterimText.length > 1) {
+                    this.addCleanText(this.lastInterimText);
+                    this.lastInterimText = '';
+                }
+                
+                // בנייד - אם במצב רציף, התחל מחדש אחרי זמן קצר
+                if (this.continuousMode) {
+                    this.mobileTimeout = setTimeout(() => {
+                        if (!this.isRecording) {
+                            this.startRecording();
+                        }
+                    }, 500); // המתנה קצרה יותר לניידים
+                } else {
+                    this.updateStatus('ההקלטה הסתיימה', 'stopped');
+                }
             } else {
-                this.updateStatus('ההקלטה הסתיימה', 'stopped');
+                // טיפול רגיל למחשב
+                if (this.continuousMode) {
+                    setTimeout(() => {
+                        if (!this.isRecording) {
+                            this.startRecording();
+                        }
+                    }, 100);
+                } else {
+                    this.updateStatus('ההקלטה הסתיימה', 'stopped');
+                }
             }
         };
     }
@@ -117,10 +150,7 @@ class SpeechToText {
             return;
         }
 
-        // בדיקה אם אנחנו במכשיר נייד
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        if (isMobile) {
+        if (this.isMobile) {
             this.updateStatus('מכשיר נייד זוהה - מתחיל הקלטה...', 'info');
         }
 
@@ -128,7 +158,11 @@ class SpeechToText {
             this.recognition.start();
         } catch (error) {
             console.error('Error starting recognition:', error);
-            this.updateStatus('שגיאה בהתחלת ההקלטה - בדוק הרשאות מיקרופון', 'error');
+            if (this.isMobile) {
+                this.updateStatus('שגיאה בנייד - בדוק הרשאות מיקרופון והתחברות לאינטרנט', 'error');
+            } else {
+                this.updateStatus('שגיאה בהתחלת ההקלטה - בדוק הרשאות מיקרופון', 'error');
+            }
         }
     }
 
@@ -359,16 +393,24 @@ class SpeechToText {
 
         switch (error) {
             case 'no-speech':
-                errorMessage = 'לא זוהה דיבור - נסה לדבר יותר חזק';
+                errorMessage = this.isMobile ? 
+                    'לא זוהה דיבור בנייד - נסה לדבר יותר חזק וקרוב למיקרופון' : 
+                    'לא זוהה דיבור - נסה לדבר יותר חזק';
                 break;
             case 'audio-capture':
-                errorMessage = 'בעיה בגישה למיקרופון - בדוק הרשאות';
+                errorMessage = this.isMobile ? 
+                    'בעיה בגישה למיקרופון בנייד - בדוק הרשאות בדפדפן' : 
+                    'בעיה בגישה למיקרופון - בדוק הרשאות';
                 break;
             case 'not-allowed':
-                errorMessage = 'אין הרשאה למיקרופון - לחץ על האייקון בכתובת';
+                errorMessage = this.isMobile ? 
+                    'אין הרשאה למיקרופון בנייד - לחץ על האייקון בכתובת ואשר' : 
+                    'אין הרשאה למיקרופון - לחץ על האייקון בכתובת';
                 break;
             case 'network':
-                errorMessage = 'בעיית רשת - בדוק חיבור לאינטרנט';
+                errorMessage = this.isMobile ? 
+                    'בעיית רשת בנייד - בדוק חיבור WiFi/נתונים' : 
+                    'בעיית רשת - בדוק חיבור לאינטרנט';
                 break;
             case 'service-not-allowed':
                 errorMessage = 'השירות לא זמין - נסה שוב';
