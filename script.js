@@ -3,6 +3,7 @@ class SpeechToText {
         this.recognition = null;
         this.isRecording = false;
         this.continuousMode = false;
+        this.lastInterimText = ''; // שמירת טקסט interim לנייד
 
         this.initializeElements();
         this.setupEventListeners();
@@ -68,8 +69,13 @@ class SpeechToText {
                 }
             }
 
+            // בנייד - גם interimTranscript יכול להיות תוצאה סופית
             if (finalTranscript) {
                 this.addCleanText(finalTranscript);
+                this.lastInterimText = ''; // נקה את ה-interim אחרי final
+            } else if (interimTranscript && interimTranscript.length > 2) {
+                // שמור את ה-interimTranscript למקרה שלא יהיה final
+                this.lastInterimText = interimTranscript;
             }
 
             if (interimTranscript) {
@@ -86,6 +92,12 @@ class SpeechToText {
             this.isRecording = false;
             this.updateUI();
             this.hideRecordingIndicator();
+
+            // בנייד - אם יש interimTranscript שלא נשמר, נשמור אותו עכשיו
+            if (this.lastInterimText && this.lastInterimText.length > 2) {
+                this.addCleanText(this.lastInterimText);
+                this.lastInterimText = '';
+            }
 
             if (this.continuousMode) {
                 setTimeout(() => {
@@ -107,17 +119,13 @@ class SpeechToText {
 
         // בדיקה אם אנחנו במכשיר נייד
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
+
         if (isMobile) {
             this.updateStatus('מכשיר נייד זוהה - מתחיל הקלטה...', 'info');
         }
 
         try {
-            // איפוס ההכרה לפני התחלה חדשה
-            this.recognition.stop();
-            setTimeout(() => {
-                this.recognition.start();
-            }, 100);
+            this.recognition.start();
         } catch (error) {
             console.error('Error starting recognition:', error);
             this.updateStatus('שגיאה בהתחלת ההקלטה - בדוק הרשאות מיקרופון', 'error');
