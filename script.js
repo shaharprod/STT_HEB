@@ -5,6 +5,7 @@ class SpeechToText {
         this.continuousMode = false;
         this.lastInterimText = ''; // שמירת טקסט interim לנייד
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.autoRestartTimeout = null; // timeout להתחלה מחדש בניידים
 
         this.initializeElements();
         this.setupEventListeners();
@@ -99,8 +100,15 @@ class SpeechToText {
                 this.lastInterimText = '';
             }
 
-            // בניידים - תמיד המשך הקלטה, במחשב - רק אם במצב רציף
-            if (this.isMobile || this.continuousMode) {
+            // בניידים - תמיד המשך הקלטה עם timeout קצר יותר
+            if (this.isMobile) {
+                this.autoRestartTimeout = setTimeout(() => {
+                    if (!this.isRecording) {
+                        console.log('מתחיל הקלטה מחדש בנייד...');
+                        this.startRecording();
+                    }
+                }, 50); // timeout קצר מאוד לניידים
+            } else if (this.continuousMode) {
                 setTimeout(() => {
                     if (!this.isRecording) {
                         this.startRecording();
@@ -119,7 +127,8 @@ class SpeechToText {
         }
 
         if (this.isMobile) {
-            this.updateStatus('מכשיר נייד זוהה - הקלטה רציפה עד לעצירה ידנית', 'info');
+            this.updateStatus('מכשיר נייד זוהה - הקלטה רציפה עם התחלה מחדש אוטומטית', 'info');
+            console.log('מתחיל הקלטה בנייד עם התחלה מחדש אוטומטית...');
         }
 
         try {
@@ -133,6 +142,12 @@ class SpeechToText {
     stopRecording() {
         if (this.recognition && this.isRecording) {
             this.recognition.stop();
+        }
+        
+        // נקה את ה-timeout האוטומטי בניידים
+        if (this.autoRestartTimeout) {
+            clearTimeout(this.autoRestartTimeout);
+            this.autoRestartTimeout = null;
         }
     }
 
