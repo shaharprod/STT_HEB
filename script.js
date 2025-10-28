@@ -5,6 +5,7 @@ class SpeechToText {
         this.continuousMode = false;
         this.lastInterimText = ''; // שמירת טקסט interim לנייד
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.allUniqueWords = []; // רשימה גלובלית של כל המילים הייחודיות
 
         this.initializeElements();
         this.setupEventListeners();
@@ -137,6 +138,7 @@ class SpeechToText {
 
     clearText() {
         this.outputText.value = '';
+        this.allUniqueWords = [];
         this.updateStatus('הטקסט נוקה', 'cleared');
         this.updateDownloadButton();
     }
@@ -147,27 +149,30 @@ class SpeechToText {
 
         if (!cleanText) return;
 
-        const currentText = this.outputText.value;
-        const currentWords = currentText ? currentText.split(' ') : [];
-        
         // פירוק הטקסט החדש למילים
-        const newWords = cleanText.split(' ');
+        const newWords = cleanText.split(' ').filter(word => word.trim());
         
-        // הוספת רק מילים חדשות שלא קיימות
-        const allWords = [...currentWords];
+        // הוספת רק מילים חדשות שלא קיימות ברשימה הגלובלית
+        let addedNewWords = false;
         
         for (let newWord of newWords) {
-            if (newWord && !allWords.includes(newWord)) {
-                allWords.push(newWord);
+            if (newWord && !this.allUniqueWords.includes(newWord)) {
+                this.allUniqueWords.push(newWord);
+                addedNewWords = true;
             }
         }
         
-        // עדכון הטקסט עם המילים הייחודיות בלבד
-        this.outputText.value = allWords.join(' ');
+        // עדכון הטקסט עם כל המילים הייחודיות
+        this.outputText.value = this.allUniqueWords.join(' ');
 
         // עדכון UI
         this.outputText.scrollTop = this.outputText.scrollHeight;
         this.updateDownloadButton();
+        
+        // הודעה לדיבוג
+        console.log('מילים חדשות:', newWords);
+        console.log('מילים ייחודיות:', this.allUniqueWords);
+        console.log('נוספו מילים חדשות:', addedNewWords);
     }
 
     isDuplicateText(newText, existingText) {
@@ -221,14 +226,14 @@ class SpeechToText {
 
         const words = currentText.split(' ');
         const uniqueWords = [];
-        
+
         // שמור רק מילים ייחודיות
         for (let word of words) {
             if (word && !uniqueWords.includes(word)) {
                 uniqueWords.push(word);
             }
         }
-        
+
         const cleanedText = uniqueWords.join(' ');
         if (cleanedText !== currentText) {
             this.outputText.value = cleanedText;
@@ -237,7 +242,7 @@ class SpeechToText {
         } else {
             this.updateStatus('לא נמצאו כפילויות', 'info');
         }
-        
+
         this.updateDownloadButton();
     }
 
