@@ -99,7 +99,8 @@ class SpeechToText {
                 this.lastInterimText = '';
             }
 
-            if (this.continuousMode) {
+            // בניידים - תמיד המשך הקלטה, במחשב - רק אם במצב רציף
+            if (this.isMobile || this.continuousMode) {
                 setTimeout(() => {
                     if (!this.isRecording) {
                         this.startRecording();
@@ -118,7 +119,7 @@ class SpeechToText {
         }
 
         if (this.isMobile) {
-            this.updateStatus('מכשיר נייד זוהה - מתחיל הקלטה...', 'info');
+            this.updateStatus('מכשיר נייד זוהה - הקלטה רציפה עד לעצירה ידנית', 'info');
         }
 
         try {
