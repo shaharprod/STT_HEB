@@ -149,7 +149,7 @@ class SpeechToText {
 
         // קבל את הטקסט הנוכחי
         const currentText = this.outputText.value;
-        
+
         // אם אין טקסט קיים, פשוט הוסף את הטקסט החדש
         if (!currentText) {
             this.outputText.value = cleanText;
@@ -161,10 +161,10 @@ class SpeechToText {
         // פירוק הטקסט החדש למילים
         const newWords = cleanText.split(' ').filter(word => word.trim());
         const currentWords = currentText.split(' ').filter(word => word.trim());
-        
+
         // הוספת רק מילים חדשות שלא קיימות
         const allWords = [...currentWords];
-        
+
         for (let newWord of newWords) {
             if (newWord && !allWords.includes(newWord)) {
                 allWords.push(newWord);
@@ -173,14 +173,14 @@ class SpeechToText {
                 console.log('מילה כבר קיימת:', newWord);
             }
         }
-        
+
         // עדכון הטקסט עם המילים הייחודיות בלבד
         this.outputText.value = allWords.join(' ');
 
         // עדכון UI
         this.outputText.scrollTop = this.outputText.scrollHeight;
         this.updateDownloadButton();
-        
+
         // הודעה לדיבוג
         console.log('טקסט חדש:', cleanText);
         console.log('מילים חדשות:', newWords);
@@ -240,14 +240,14 @@ class SpeechToText {
 
         const words = currentText.split(' ').filter(word => word.trim());
         const uniqueWords = [];
-        
+
         // שמור רק מילים ייחודיות
         for (let word of words) {
             if (word && !uniqueWords.includes(word)) {
                 uniqueWords.push(word);
             }
         }
-        
+
         const cleanedText = uniqueWords.join(' ');
         if (cleanedText !== currentText) {
             this.outputText.value = cleanedText;
@@ -258,7 +258,7 @@ class SpeechToText {
             this.updateStatus('לא נמצאו כפילויות', 'info');
             console.log('לא נמצאו כפילויות');
         }
-        
+
         this.updateDownloadButton();
     }
 
