@@ -24,7 +24,7 @@ class SpeechToText {
         this.languageSelect = document.getElementById('languageSelect');
         this.continuousModeCheckbox = document.getElementById('continuousMode');
         this.downloadFormatSelect = document.getElementById('downloadFormat');
-        
+
         // בדיקה שהכפתור נמצא
         if (this.removeDuplicatesBtn) {
             console.log('כפתור ניקוי כפילויות נמצא');
@@ -38,7 +38,7 @@ class SpeechToText {
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.clearBtn.addEventListener('click', () => this.clearText());
         this.downloadBtn.addEventListener('click', () => this.downloadText());
-        
+
         // בדיקה וחיבור כפתור ניקוי כפילויות
         if (this.removeDuplicatesBtn) {
             this.removeDuplicatesBtn.addEventListener('click', () => this.removeDuplicatesFromExistingText());
@@ -46,7 +46,7 @@ class SpeechToText {
         } else {
             console.error('לא ניתן לחבר event listener לכפתור ניקוי כפילויות');
         }
-        
+
         this.languageSelect.addEventListener('change', () => this.updateLanguage());
         this.continuousModeCheckbox.addEventListener('change', (e) => {
             this.continuousMode = e.target.checked;
@@ -202,7 +202,7 @@ class SpeechToText {
     removeDuplicatesFromExistingText() {
         console.log('כפתור ניקוי כפילויות נלחץ!');
         
-        // ניקוי כפילויות מהטקסט הקיים - גרסה עדינה
+        // ניקוי כפילויות מהטקסט הקיים - לפי תבנית מושלמת
         const currentText = this.outputText.value.trim();
         console.log('טקסט נוכחי:', currentText);
         
@@ -215,29 +215,47 @@ class SpeechToText {
         const words = currentText.split(' ');
         console.log('מילים לפני ניקוי:', words);
         
-        const uniqueWords = [];
+        // מצא את התבנית המושלמת (המילים האחרונות ללא כפילויות)
+        let perfectPattern = [];
+        let foundPattern = false;
         
-        // שמור רק מילים ייחודיות רצופות
-        for (let i = 0; i < words.length; i++) {
+        // התחל מהסוף וחפש תבנית מושלמת
+        for (let i = words.length - 1; i >= 0; i--) {
             const currentWord = words[i];
             
-            // אם המילה לא זהה לקודמת, הוסף אותה
-            if (i === 0 || currentWord !== words[i - 1]) {
-                uniqueWords.push(currentWord);
+            // אם המילה לא קיימת בתבנית המושלמת, הוסף אותה
+            if (!perfectPattern.includes(currentWord)) {
+                perfectPattern.unshift(currentWord);
+            } else {
+                // אם המילה כבר קיימת, זה סוף התבנית המושלמת
+                foundPattern = true;
+                break;
             }
         }
         
-        console.log('מילים אחרי ניקוי:', uniqueWords);
+        console.log('תבנית מושלמת שנמצאה:', perfectPattern);
         
-        const cleanedText = uniqueWords.join(' ');
-        if (cleanedText !== currentText) {
-            this.outputText.value = cleanedText;
-            const removedCount = words.length - uniqueWords.length;
-            this.updateStatus(`נוקו ${removedCount} מילים כפולות רצופות`, 'success');
-            console.log('נוקו מילים כפולות רצופות:', removedCount);
+        if (foundPattern && perfectPattern.length > 0) {
+            // מצא את המיקום של התבנית המושלמת בטקסט
+            const perfectPatternText = perfectPattern.join(' ');
+            const lastIndex = currentText.lastIndexOf(perfectPatternText);
+            
+            if (lastIndex !== -1) {
+                // קח רק את התבנית המושלמת
+                const cleanedText = perfectPatternText;
+                this.outputText.value = cleanedText;
+                
+                const removedCount = words.length - perfectPattern.length;
+                this.updateStatus(`נוקו ${removedCount} מילים כפולות - נשמרה התבנית המושלמת`, 'success');
+                console.log('נוקו מילים כפולות:', removedCount);
+                console.log('טקסט אחרי ניקוי:', cleanedText);
+            } else {
+                this.updateStatus('לא נמצאה תבנית מושלמת', 'info');
+                console.log('לא נמצאה תבנית מושלמת');
+            }
         } else {
-            this.updateStatus('לא נמצאו כפילויות רצופות', 'info');
-            console.log('לא נמצאו כפילויות רצופות');
+            this.updateStatus('לא נמצאה תבנית מושלמת', 'info');
+            console.log('לא נמצאה תבנית מושלמת');
         }
         
         this.updateDownloadButton();
