@@ -143,7 +143,7 @@ class SpeechToText {
         if (this.recognition && this.isRecording) {
             this.recognition.stop();
         }
-        
+
         // נקה את ה-timeout האוטומטי בניידים
         if (this.autoRestartTimeout) {
             clearTimeout(this.autoRestartTimeout);

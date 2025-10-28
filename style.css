@@ -11,6 +11,8 @@ body {
     min-height: 100vh;
     color: #333;
     direction: rtl;
+    font-size: 18px; /* הוגדל בשתי דרגות */
+    line-height: 1.6;
 }
 
 .container {
@@ -34,14 +36,14 @@ header {
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 3rem; /* הוגדל מ-2.5rem */
     color: #4a5568;
     margin-bottom: 10px;
     font-weight: 700;
 }
 
 header p {
-    font-size: 1.1rem;
+    font-size: 1.3rem; /* הוגדל מ-1.1rem */
     color: #718096;
 }
 
@@ -68,7 +70,7 @@ main {
     padding: 15px 25px;
     border: none;
     border-radius: 10px;
-    font-size: 1rem;
+    font-size: 1.2rem; /* הוגדל מ-1rem */
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -125,7 +127,7 @@ main {
 }
 
 .status-text {
-    font-size: 1.1rem;
+    font-size: 1.3rem; /* הוגדל מ-1.1rem */
     padding: 15px;
     border-radius: 10px;
     margin-bottom: 15px;
@@ -230,7 +232,7 @@ main {
     padding: 20px;
     border: 2px solid #e2e8f0;
     border-radius: 10px;
-    font-size: 1rem;
+    font-size: 1.2rem; /* הוגדל מ-1rem */
     line-height: 1.6;
     resize: vertical;
     font-family: inherit;
