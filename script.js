@@ -17,6 +17,7 @@ class SpeechToText {
         this.stopBtn = document.getElementById('stopBtn');
         this.clearBtn = document.getElementById('clearBtn');
         this.downloadBtn = document.getElementById('downloadBtn');
+        this.removeDuplicatesBtn = document.getElementById('removeDuplicatesBtn');
         this.outputText = document.getElementById('outputText');
         this.statusText = document.getElementById('statusText');
         this.recordingIndicator = document.getElementById('recordingIndicator');
@@ -30,6 +31,7 @@ class SpeechToText {
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.clearBtn.addEventListener('click', () => this.clearText());
         this.downloadBtn.addEventListener('click', () => this.downloadText());
+        this.removeDuplicatesBtn.addEventListener('click', () => this.removeDuplicatesFromExistingText());
         this.languageSelect.addEventListener('change', () => this.updateLanguage());
         this.continuousModeCheckbox.addEventListener('change', (e) => {
             this.continuousMode = e.target.checked;
@@ -164,6 +166,12 @@ class SpeechToText {
         // קבל את הטקסט הנוכחי
         const currentText = this.outputText.value;
         
+        // בדיקה עדינה נגד כפילויות ברורות בלבד
+        if (currentText && currentText.endsWith(cleanText)) {
+            console.log('נמנעה כפילות ברורה:', cleanText);
+            return; // אל תוסיף אם הטקסט זהה לטקסט האחרון
+        }
+        
         // הוספת הטקסט החדש
         const separator = currentText ? ' ' : '';
         this.outputText.value = currentText + separator + cleanText;
@@ -174,6 +182,38 @@ class SpeechToText {
         
         // הודעה לדיבוג
         console.log('נוסף טקסט:', cleanText);
+    }
+
+    removeDuplicatesFromExistingText() {
+        // ניקוי כפילויות מהטקסט הקיים - גרסה עדינה
+        const currentText = this.outputText.value.trim();
+        if (!currentText) return;
+
+        const words = currentText.split(' ');
+        const uniqueWords = [];
+        
+        // שמור רק מילים ייחודיות רצופות
+        for (let i = 0; i < words.length; i++) {
+            const currentWord = words[i];
+            
+            // אם המילה לא זהה לקודמת, הוסף אותה
+            if (i === 0 || currentWord !== words[i - 1]) {
+                uniqueWords.push(currentWord);
+            }
+        }
+        
+        const cleanedText = uniqueWords.join(' ');
+        if (cleanedText !== currentText) {
+            this.outputText.value = cleanedText;
+            const removedCount = words.length - uniqueWords.length;
+            this.updateStatus(`נוקו ${removedCount} מילים כפולות רצופות`, 'success');
+            console.log('נוקו מילים כפולות רצופות:', removedCount);
+        } else {
+            this.updateStatus('לא נמצאו כפילויות רצופות', 'info');
+            console.log('לא נמצאו כפילויות רצופות');
+        }
+        
+        this.updateDownloadButton();
     }
 
     downloadText() {
