@@ -16,6 +16,7 @@ class SpeechToText {
         this.stopBtn = document.getElementById('stopBtn');
         this.clearBtn = document.getElementById('clearBtn');
         this.downloadBtn = document.getElementById('downloadBtn');
+        this.removeDuplicatesBtn = document.getElementById('removeDuplicatesBtn');
         this.outputText = document.getElementById('outputText');
         this.statusText = document.getElementById('statusText');
         this.recordingIndicator = document.getElementById('recordingIndicator');
@@ -29,6 +30,7 @@ class SpeechToText {
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.clearBtn.addEventListener('click', () => this.clearText());
         this.downloadBtn.addEventListener('click', () => this.downloadText());
+        this.removeDuplicatesBtn.addEventListener('click', () => this.removeDuplicatesFromExistingText());
         this.languageSelect.addEventListener('change', () => this.updateLanguage());
         this.continuousModeCheckbox.addEventListener('change', (e) => {
             this.continuousMode = e.target.checked;
