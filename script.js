@@ -202,7 +202,7 @@ class SpeechToText {
     removeDuplicatesFromExistingText() {
         console.log('כפתור ניקוי כפילויות נלחץ!');
         
-        // ניקוי כפילויות מהטקסט הקיים - לפי תבנית מושלמת
+        // ניקוי כפילויות מהטקסט הקיים - שמירת משפטים מושלמים קודמים
         const currentText = this.outputText.value.trim();
         console.log('טקסט נוכחי:', currentText);
         
@@ -241,12 +241,14 @@ class SpeechToText {
             const lastIndex = currentText.lastIndexOf(perfectPatternText);
             
             if (lastIndex !== -1) {
-                // קח רק את התבנית המושלמת
-                const cleanedText = perfectPatternText;
+                // קח את הטקסט עד לתבנית המושלמת (כולל משפטים קודמים)
+                const textBeforePattern = currentText.substring(0, lastIndex).trim();
+                const cleanedText = textBeforePattern ? textBeforePattern + ' ' + perfectPatternText : perfectPatternText;
+                
                 this.outputText.value = cleanedText;
                 
-                const removedCount = words.length - perfectPattern.length;
-                this.updateStatus(`נוקו ${removedCount} מילים כפולות - נשמרה התבנית המושלמת`, 'success');
+                const removedCount = words.length - cleanedText.split(' ').length;
+                this.updateStatus(`נוקו ${removedCount} מילים כפולות - נשמרו משפטים קודמים`, 'success');
                 console.log('נוקו מילים כפולות:', removedCount);
                 console.log('טקסט אחרי ניקוי:', cleanedText);
             } else {
