@@ -24,6 +24,13 @@ class SpeechToText {
         this.languageSelect = document.getElementById('languageSelect');
         this.continuousModeCheckbox = document.getElementById('continuousMode');
         this.downloadFormatSelect = document.getElementById('downloadFormat');
+        
+        // בדיקה שהכפתור נמצא
+        if (this.removeDuplicatesBtn) {
+            console.log('כפתור ניקוי כפילויות נמצא');
+        } else {
+            console.error('כפתור ניקוי כפילויות לא נמצא!');
+        }
     }
 
     setupEventListeners() {
@@ -31,7 +38,15 @@ class SpeechToText {
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.clearBtn.addEventListener('click', () => this.clearText());
         this.downloadBtn.addEventListener('click', () => this.downloadText());
-        this.removeDuplicatesBtn.addEventListener('click', () => this.removeDuplicatesFromExistingText());
+        
+        // בדיקה וחיבור כפתור ניקוי כפילויות
+        if (this.removeDuplicatesBtn) {
+            this.removeDuplicatesBtn.addEventListener('click', () => this.removeDuplicatesFromExistingText());
+            console.log('Event listener לכפתור ניקוי כפילויות מחובר');
+        } else {
+            console.error('לא ניתן לחבר event listener לכפתור ניקוי כפילויות');
+        }
+        
         this.languageSelect.addEventListener('change', () => this.updateLanguage());
         this.continuousModeCheckbox.addEventListener('change', (e) => {
             this.continuousMode = e.target.checked;
@@ -165,13 +180,13 @@ class SpeechToText {
 
         // קבל את הטקסט הנוכחי
         const currentText = this.outputText.value;
-        
+
         // בדיקה עדינה נגד כפילויות ברורות בלבד
         if (currentText && currentText.endsWith(cleanText)) {
             console.log('נמנעה כפילות ברורה:', cleanText);
             return; // אל תוסיף אם הטקסט זהה לטקסט האחרון
         }
-        
+
         // הוספת הטקסט החדש
         const separator = currentText ? ' ' : '';
         this.outputText.value = currentText + separator + cleanText;
@@ -179,17 +194,27 @@ class SpeechToText {
         // עדכון UI
         this.outputText.scrollTop = this.outputText.scrollHeight;
         this.updateDownloadButton();
-        
+
         // הודעה לדיבוג
         console.log('נוסף טקסט:', cleanText);
     }
 
     removeDuplicatesFromExistingText() {
+        console.log('כפתור ניקוי כפילויות נלחץ!');
+        
         // ניקוי כפילויות מהטקסט הקיים - גרסה עדינה
         const currentText = this.outputText.value.trim();
-        if (!currentText) return;
+        console.log('טקסט נוכחי:', currentText);
+        
+        if (!currentText) {
+            console.log('אין טקסט לניקוי');
+            this.updateStatus('אין טקסט לניקוי', 'info');
+            return;
+        }
 
         const words = currentText.split(' ');
+        console.log('מילים לפני ניקוי:', words);
+        
         const uniqueWords = [];
         
         // שמור רק מילים ייחודיות רצופות
@@ -201,6 +226,8 @@ class SpeechToText {
                 uniqueWords.push(currentWord);
             }
         }
+        
+        console.log('מילים אחרי ניקוי:', uniqueWords);
         
         const cleanedText = uniqueWords.join(' ');
         if (cleanedText !== currentText) {
