@@ -148,15 +148,22 @@ class SpeechToText {
         if (!cleanText) return;
 
         const currentText = this.outputText.value;
-
-        // בדיקה מתקדמת נגד כפילויות
-        if (this.isDuplicateText(cleanText, currentText)) {
-            return; // כפילות - אל תוסיף
+        const currentWords = currentText ? currentText.split(' ') : [];
+        
+        // פירוק הטקסט החדש למילים
+        const newWords = cleanText.split(' ');
+        
+        // הוספת רק מילים חדשות שלא קיימות
+        const allWords = [...currentWords];
+        
+        for (let newWord of newWords) {
+            if (newWord && !allWords.includes(newWord)) {
+                allWords.push(newWord);
+            }
         }
-
-        // הוספת הטקסט
-        const separator = currentText ? ' ' : '';
-        this.outputText.value = currentText + separator + cleanText;
+        
+        // עדכון הטקסט עם המילים הייחודיות בלבד
+        this.outputText.value = allWords.join(' ');
 
         // עדכון UI
         this.outputText.scrollTop = this.outputText.scrollHeight;
@@ -208,26 +215,17 @@ class SpeechToText {
     }
 
     removeDuplicatesFromExistingText() {
-        // ניקוי כפילויות מהטקסט הקיים - גרסה משופרת
+        // ניקוי כפילויות מהטקסט הקיים - הסרת כל הכפילויות
         const currentText = this.outputText.value.trim();
         if (!currentText) return;
 
         const words = currentText.split(' ');
         const uniqueWords = [];
         
-        for (let i = 0; i < words.length; i++) {
-            const currentWord = words[i];
-            
-            // בדוק אם המילה כבר קיימת ברשימה
-            if (!uniqueWords.includes(currentWord)) {
-                uniqueWords.push(currentWord);
-            } else {
-                // אם המילה כבר קיימת, בדוק אם זה רצף
-                const lastWord = uniqueWords[uniqueWords.length - 1];
-                if (lastWord !== currentWord) {
-                    // אם זה לא רצף, זה כפילות - אל תוסיף
-                    continue;
-                }
+        // שמור רק מילים ייחודיות
+        for (let word of words) {
+            if (word && !uniqueWords.includes(word)) {
+                uniqueWords.push(word);
             }
         }
         
