@@ -17,7 +17,6 @@ class SpeechToText {
         this.stopBtn = document.getElementById('stopBtn');
         this.clearBtn = document.getElementById('clearBtn');
         this.downloadBtn = document.getElementById('downloadBtn');
-        this.removeDuplicatesBtn = document.getElementById('removeDuplicatesBtn');
         this.outputText = document.getElementById('outputText');
         this.statusText = document.getElementById('statusText');
         this.recordingIndicator = document.getElementById('recordingIndicator');
@@ -31,7 +30,6 @@ class SpeechToText {
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.clearBtn.addEventListener('click', () => this.clearText());
         this.downloadBtn.addEventListener('click', () => this.downloadText());
-        this.removeDuplicatesBtn.addEventListener('click', () => this.removeDuplicatesFromExistingText());
         this.languageSelect.addEventListener('change', () => this.updateLanguage());
         this.continuousModeCheckbox.addEventListener('change', (e) => {
             this.continuousMode = e.target.checked;
@@ -165,117 +163,17 @@ class SpeechToText {
 
         // קבל את הטקסט הנוכחי
         const currentText = this.outputText.value;
-
-        // אם אין טקסט קיים, פשוט הוסף את הטקסט החדש
-        if (!currentText) {
-            this.outputText.value = cleanText;
-            this.updateDownloadButton();
-            console.log('טקסט ראשון:', cleanText);
-            return;
-        }
-
-        // פירוק הטקסט החדש למילים
-        const newWords = cleanText.split(' ').filter(word => word.trim());
-        const currentWords = currentText.split(' ').filter(word => word.trim());
-
-        // הוספת רק מילים חדשות שלא קיימות
-        const allWords = [...currentWords];
-
-        for (let newWord of newWords) {
-            if (newWord && !allWords.includes(newWord)) {
-                allWords.push(newWord);
-                console.log('נוספה מילה חדשה:', newWord);
-            } else {
-                console.log('מילה כבר קיימת:', newWord);
-            }
-        }
-
-        // עדכון הטקסט עם המילים הייחודיות בלבד
-        this.outputText.value = allWords.join(' ');
+        
+        // הוספת הטקסט החדש
+        const separator = currentText ? ' ' : '';
+        this.outputText.value = currentText + separator + cleanText;
 
         // עדכון UI
         this.outputText.scrollTop = this.outputText.scrollHeight;
         this.updateDownloadButton();
-
+        
         // הודעה לדיבוג
-        console.log('טקסט חדש:', cleanText);
-        console.log('מילים חדשות:', newWords);
-        console.log('מילים קיימות:', currentWords);
-        console.log('מילים סופיות:', allWords);
-        console.log('---');
-    }
-
-    isDuplicateText(newText, existingText) {
-        if (!newText || !existingText) return false;
-
-        // בדיקה 1: האם הטקסט החדש זהה לטקסט האחרון
-        const words = existingText.split(' ');
-        const lastWord = words[words.length - 1];
-        if (lastWord === newText) {
-            return true;
-        }
-
-        // בדיקה 2: האם הטקסט החדש מופיע בסוף הטקסט הקיים
-        if (existingText.endsWith(newText)) {
-            return true;
-        }
-
-        // בדיקה 3: האם הטקסט החדש מופיע במילים האחרונות (יותר אגרסיבי)
-        const lastWords = words.slice(-5).join(' '); // בדוק 5 המילים האחרונות
-        if (lastWords.includes(newText)) {
-            return true;
-        }
-
-        // בדיקה 4: האם יש חפיפה חלקית
-        const newWords = newText.split(' ');
-        if (newWords.length > 1) {
-            // בדוק אם המילים החדשות כבר קיימות בסוף
-            const existingLastWords = words.slice(-newWords.length);
-            if (existingLastWords.join(' ') === newText) {
-                return true;
-            }
-        }
-
-        // בדיקה 5: בדיקה ברמת תו - האם הטקסט החדש מופיע בכלל בטקסט הקיים
-        if (existingText.includes(newText)) {
-            // בדוק אם זה לא חלק ממילה ארוכה יותר
-            const regex = new RegExp(`\\b${newText}\\b`, 'g');
-            const matches = existingText.match(regex);
-            if (matches && matches.length > 0) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    removeDuplicatesFromExistingText() {
-        // ניקוי כפילויות מהטקסט הקיים - הסרת כל הכפילויות
-        const currentText = this.outputText.value.trim();
-        if (!currentText) return;
-
-        const words = currentText.split(' ').filter(word => word.trim());
-        const uniqueWords = [];
-
-        // שמור רק מילים ייחודיות
-        for (let word of words) {
-            if (word && !uniqueWords.includes(word)) {
-                uniqueWords.push(word);
-            }
-        }
-
-        const cleanedText = uniqueWords.join(' ');
-        if (cleanedText !== currentText) {
-            this.outputText.value = cleanedText;
-            const removedCount = words.length - uniqueWords.length;
-            this.updateStatus(`נוקו ${removedCount} מילים כפולות`, 'success');
-            console.log('נוקו מילים כפולות:', removedCount);
-        } else {
-            this.updateStatus('לא נמצאו כפילויות', 'info');
-            console.log('לא נמצאו כפילויות');
-        }
-
-        this.updateDownloadButton();
+        console.log('נוסף טקסט:', cleanText);
     }
 
     downloadText() {
