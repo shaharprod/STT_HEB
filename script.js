@@ -149,9 +149,9 @@ class SpeechToText {
 
         const currentText = this.outputText.value;
 
-        // בדיקה פשוטה נגד כפילויות
-        if (currentText.endsWith(cleanText)) {
-            return; // כפילות
+        // בדיקה מתקדמת נגד כפילויות
+        if (this.isDuplicateText(cleanText, currentText)) {
+            return; // כפילות - אל תוסיף
         }
 
         // הוספת הטקסט
@@ -160,6 +160,86 @@ class SpeechToText {
 
         // עדכון UI
         this.outputText.scrollTop = this.outputText.scrollHeight;
+        this.updateDownloadButton();
+    }
+
+    isDuplicateText(newText, existingText) {
+        if (!newText || !existingText) return false;
+
+        // בדיקה 1: האם הטקסט החדש זהה לטקסט האחרון
+        const words = existingText.split(' ');
+        const lastWord = words[words.length - 1];
+        if (lastWord === newText) {
+            return true;
+        }
+
+        // בדיקה 2: האם הטקסט החדש מופיע בסוף הטקסט הקיים
+        if (existingText.endsWith(newText)) {
+            return true;
+        }
+
+        // בדיקה 3: האם הטקסט החדש מופיע במילים האחרונות (יותר אגרסיבי)
+        const lastWords = words.slice(-5).join(' '); // בדוק 5 המילים האחרונות
+        if (lastWords.includes(newText)) {
+            return true;
+        }
+
+        // בדיקה 4: האם יש חפיפה חלקית
+        const newWords = newText.split(' ');
+        if (newWords.length > 1) {
+            // בדוק אם המילים החדשות כבר קיימות בסוף
+            const existingLastWords = words.slice(-newWords.length);
+            if (existingLastWords.join(' ') === newText) {
+                return true;
+            }
+        }
+
+        // בדיקה 5: בדיקה ברמת תו - האם הטקסט החדש מופיע בכלל בטקסט הקיים
+        if (existingText.includes(newText)) {
+            // בדוק אם זה לא חלק ממילה ארוכה יותר
+            const regex = new RegExp(`\\b${newText}\\b`, 'g');
+            const matches = existingText.match(regex);
+            if (matches && matches.length > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    removeDuplicatesFromExistingText() {
+        // ניקוי כפילויות מהטקסט הקיים - גרסה משופרת
+        const currentText = this.outputText.value.trim();
+        if (!currentText) return;
+
+        const words = currentText.split(' ');
+        const uniqueWords = [];
+        
+        for (let i = 0; i < words.length; i++) {
+            const currentWord = words[i];
+            
+            // בדוק אם המילה כבר קיימת ברשימה
+            if (!uniqueWords.includes(currentWord)) {
+                uniqueWords.push(currentWord);
+            } else {
+                // אם המילה כבר קיימת, בדוק אם זה רצף
+                const lastWord = uniqueWords[uniqueWords.length - 1];
+                if (lastWord !== currentWord) {
+                    // אם זה לא רצף, זה כפילות - אל תוסיף
+                    continue;
+                }
+            }
+        }
+        
+        const cleanedText = uniqueWords.join(' ');
+        if (cleanedText !== currentText) {
+            this.outputText.value = cleanedText;
+            const removedCount = words.length - uniqueWords.length;
+            this.updateStatus(`נוקו ${removedCount} מילים כפולות`, 'success');
+        } else {
+            this.updateStatus('לא נמצאו כפילויות', 'info');
+        }
+        
         this.updateDownloadButton();
     }
 
