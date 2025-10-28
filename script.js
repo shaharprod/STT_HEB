@@ -147,12 +147,20 @@ class SpeechToText {
 
         if (!cleanText) return;
 
-        // פירוק הטקסט החדש למילים
-        const newWords = cleanText.split(' ').filter(word => word.trim());
-        
         // קבל את הטקסט הנוכחי
         const currentText = this.outputText.value;
-        const currentWords = currentText ? currentText.split(' ').filter(word => word.trim()) : [];
+        
+        // אם אין טקסט קיים, פשוט הוסף את הטקסט החדש
+        if (!currentText) {
+            this.outputText.value = cleanText;
+            this.updateDownloadButton();
+            console.log('טקסט ראשון:', cleanText);
+            return;
+        }
+
+        // פירוק הטקסט החדש למילים
+        const newWords = cleanText.split(' ').filter(word => word.trim());
+        const currentWords = currentText.split(' ').filter(word => word.trim());
         
         // הוספת רק מילים חדשות שלא קיימות
         const allWords = [...currentWords];
@@ -160,6 +168,9 @@ class SpeechToText {
         for (let newWord of newWords) {
             if (newWord && !allWords.includes(newWord)) {
                 allWords.push(newWord);
+                console.log('נוספה מילה חדשה:', newWord);
+            } else {
+                console.log('מילה כבר קיימת:', newWord);
             }
         }
         
@@ -227,25 +238,27 @@ class SpeechToText {
         const currentText = this.outputText.value.trim();
         if (!currentText) return;
 
-        const words = currentText.split(' ');
+        const words = currentText.split(' ').filter(word => word.trim());
         const uniqueWords = [];
-
+        
         // שמור רק מילים ייחודיות
         for (let word of words) {
             if (word && !uniqueWords.includes(word)) {
                 uniqueWords.push(word);
             }
         }
-
+        
         const cleanedText = uniqueWords.join(' ');
         if (cleanedText !== currentText) {
             this.outputText.value = cleanedText;
             const removedCount = words.length - uniqueWords.length;
             this.updateStatus(`נוקו ${removedCount} מילים כפולות`, 'success');
+            console.log('נוקו מילים כפולות:', removedCount);
         } else {
             this.updateStatus('לא נמצאו כפילויות', 'info');
+            console.log('לא נמצאו כפילויות');
         }
-
+        
         this.updateDownloadButton();
     }
 
